@@ -2,26 +2,27 @@
 from flask import Flask, jsonify
 from sqlalchemy import create_engine, func
 from sqlalchemy.orm import Session
-from sqlalchemy.ext.automap import automap_base
+from sqlalchemy,ext.automap import automap_base
 import numpy as np
 import datetime as dt
 
 #################################################
 # Database Setup
 #################################################
-engine = create_engine("sqlite:///Resources/hawaii.sqlite")
+enngine = create_engine("sqlite:///Resources/hawaii.sqlite")
 
 # reflect an existing database into a new model
 Base = automap_base()
 
 # reflect the tables
-Base.prepare(autoload_with=engine)
+Base.prepare(engine, refect=True)
 
 # Save references to each table
-measurement_info = Base.classes.measurement
-station_info = Base.classes.station
+Measurement = Base.classes.measurement
+Station = Base.classes.station
 
 # Create our session (link) from Python to the DB
+
 
 #################################################
 # Flask Setup
@@ -49,7 +50,7 @@ def home():
 @app.route('/api/v1.0/precipitation')
 def precipitation():
     session = Session(engine)
-    return [ {d:p} for d,p in session.query(measurement_info.date, measurement_info.prcp).filter(measurement_info.date>='2016-08-23').all()]
+    return [ {d:p} for d,p in session.query(Measurement.date, Measurement.prcp).filter(Measurement.date>='2016-08-23').all()]
 
 @app.route('/api/v1.0/station')
 def stations():
@@ -61,12 +62,14 @@ def stations():
     stations= list(np.ravel(results))
     return jsonify(stations=stations)
 
+
+
 @app.route("/api/v1.0/tobs")
 def tobs():
      session = Session(engine)
 
-     queryresult = session.query( measurement_info.date, measurement_info.tobs).filter(measurement_info.station=='USC00519281')\
-     .filter(measurement_info.date>='2016-08-23').all()
+     queryresult = session.query( Measurement.date, Measurement.tobs).filter(Measurement.station=='USC00519281')\
+     .filter(Measurement.date>='2016-08-23').all()
      session.close()
      tob_obs = []
      for date, tobs in queryresult:
@@ -77,12 +80,13 @@ def tobs():
  
      return jsonify(tob_obs)
 
+
 @app.route("/api/v1.0/<start>")
 
 def get_temps_start(start):
     session = Session(engine)
-    results = session.query(func.min(measurement_info.tobs), func.avg(measurement_info.tobs), func.max(measurement_info.tobs)).\
-              filter(measurement_info.date >= start).all()
+    results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+              filter(Measurement.date >= start).all()
     session.close()
 
     temps = []
@@ -98,8 +102,8 @@ def get_temps_start(start):
 @app.route("/api/v1.0/<start>/<end>")
 def get_temps_start_end(start, end):
     session = Session(engine)
-    results = session.query(func.min(measurement_info.tobs), func.avg(measurement_info.tobs), func.max(measurement_info.tobs)).\
-              filter(measurement_info.date >= start).filter(measurement_info.date <= end).all()
+    results = session.query(func.min(Measurement.tobs), func.avg(Measurement.tobs), func.max(Measurement.tobs)).\
+              filter(Measurement.date >= start).filter(Measurement.date <= end).all()
     session.close()
 
     temps = []
